@@ -1,0 +1,86 @@
+<div class="modal" id="newsFormBox" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form role="form" action="">
+                <div class="modal-header">
+                    <h5 class="modal-title" v-if="!news.id">Thêm mới tin tức</h5>
+                    <h5 class="modal-title" v-else>Cập nhật tin tức</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" v-model="news.id" />
+                    <div class="form-body">
+                        <div class="form-group">
+                            <div class="alert alert-warning text-center alert-loading" v-show="loading">
+                                <i class="fa fa-spin fa-spinner"></i> Hệ thống đang xử lý dữ liệu, vui lòng đợi trong giây lát!
+                            </div>
+                        </div>
+                        <div class="form-group col-md-8">
+                            <label class="control-label">Tiêu đề <span class="required">*</span></label>
+                            <input v-model="news.title" class="form-control" type="text" required />
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label class="control-label">Danh mục <span class="required">*</span></label>
+                                <select class=" form-control" v-model="news.folderId">
+                                    <option value="">-- Danh mục --</option>
+                                    <option v-for="item in listFolder" v-bind:value="item.id">{{item.text}}</option>
+                                </select>
+                                <p><a href="/module/blog/default/vue/newsCategory/index" target="_blank">Quản trị danh mục</a></p>
+                            </div>
+                            
+                            </div>
+                        <div class="form-group col-md-12">
+                            <label class="control-label ">Trạng thái</label>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="news.status" v-model="news.status" true-value="1" false-value="2">
+                                <label class="custom-control-label" for="news.status">Bật</label>
+                        </div>
+                            <!-- <div class="form-group col-md-4">
+                                <label class="control-label">Trạng thái</label>
+                                <select class=" form-control" v-model="news.hot">
+                                    <option value="">-- Trạng thái --</option>
+                                    <option value="1">Hiển thị</option>
+                                    <option value="2">Ẩn</option>
+                                </select>
+                            </div> -->
+                            <!-- <div class="form-group col-md-4">
+                                <label class="control-label">Tin nổi bật</label>
+                                <select class=" form-control" v-model="news.hot">
+                                    <option value="">-- Tin nổi bật --</option>
+                                    <option value="1">Có</option>
+                                    <option value="0">Không</option>
+                                </select>
+                            </div> -->
+                        </div>
+                        <!-- <div class="form-group">
+                            <label class=" control-label">Cấp đơn vị <span class="required">*</span></label>
+                            <donvi-tree id="treeDonviFilter"  v-model="news.donviId"></donvi-tree>
+                        </div> -->
+                        <div class="form-group">
+                            <label class="control-label">Ảnh đại diện <span class="required">*</span></label>
+                            [% set widgetOptions = {inputId : 'newsImageId', vmodel : 'news.imageId', vue_support : true} %]
+                            ${ widget('\\module\\filesystem\\widget\\uploadFile', 'newsImageId', 'news.imageId', widgetOptions, 'images') | raw }
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Trích dẫn <span class="required">*</span></label>
+                            <textarea class="form-control" type="text" required rows="2" v-model="news.description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Nội dung</label>
+                            <textarea class="form-control ckeditor" id="newsContent"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-actions">
+                        <button type="button" v-bind:disabled="loading" class="btn btn-secondary pull-left btn-submit" data-dismiss="modal">Đóng</button>
+                        <button type="button" v-on:click="saveNews($event)" v-bind:disabled="loading" class="btn btn-primary pull-right btn-submit"><i class="fa fa-spin fa-spinner" v-show="loading"></i> Lưu lại</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

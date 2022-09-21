@@ -1,0 +1,197 @@
+${setViewParam('pageTitle', 'Quản trị tin tức')}
+${registerJsFiles([
+'/assets/module/blog/newsGrid.vue.js',
+'/assets/module/blog/newsForm.vue.js',
+'/assets/module/blog/formNewsClone.vue.js'
+])}
+
+${registerJsFile(
+'/assets/module/common/donViTree.js', 'POS_HEAD'
+)}
+
+<div id="newsGridBox" v-cloak>
+    <div class="portlet light portlet-fit portlet-datatable bordered">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-newspaper-o" aria-hidden="true"></i>
+                <span class="caption-subject font-green sbold uppercase">Danh sách tin tức</span>
+            </div>
+            <div class="actions">
+                <div class="text-right tool-datagrid" v-if="newIds.length">
+                    <a class="btn btn-sm btn-grid btn-grid-deactive-active"
+                        style="background-color: rgb(211, 158, 40); color: #fff;" title="Tắt hoạt động tin tức"
+                        @click="chageStatusNew('tam_dung', pager.page)"><i
+                            v-bind:class="{'fa fa-spin fa-spinner': huyKichHoatClick, 'icon-lock': !huyKichHoatClick}"></i>
+                        Tắt</a>&nbsp;
+                    <a class="btn btn-sm btn-success btn-grid btn-grid-active-active"
+                        title="Bật hoạt động của tin tức" @click="chageStatusNew('kich_hoat', pager.page)"><i
+                            v-bind:class="'icon-lock-open'"></i> Bật</a>&nbsp;
+                    <a class="btn btn-danger btn-grid btn-grid-deletes" @click="deleteNew(pager.page)"
+                        style="height: 28px; padding-top: 2pt;">
+                        <i class="fa fa-trash-o"></i>
+                        <span v-if="!onDelete">Xóa tin tức</span>
+                        <span v-if="onDelete">Đang xóa ...</span>
+                    </a>
+                    <a href="/module/blog/default/vue/newsCategory/index"
+                        class="btn btn-sm blue btn-outline margin-right-10">
+                        Danh mục tin tức
+                    </a>
+
+                    <!-- [% if hasRole(sys_admin) %]
+                    <a class="btn btn-danger btn-circle" title="Sinh mặc định" href="javascript:void(0);" v-bind:onclick="'formNewsCloneApp.funcAdd()'">Sinh mặc định</a>
+                    [% endif %] -->
+                    <div class="btn-group">
+                        <a class="btn green-haze btn-outline btn-sm" href="javascript:void(0);"
+                            v-bind:onclick="'newsFormApp.funcAdd()'">
+                            <i class="fa fa-plus-square"></i> Thêm mới
+                        </a>
+                    </div>
+                </div>
+                <div class="btn-group" v-else>
+                    <a href="/module/blog/default/vue/newsCategory/index"
+                        class="btn btn-sm blue btn-outline margin-right-10">
+                        Danh mục tin tức
+                    </a>
+
+                    <!-- [% if hasRole(sys_admin) %]
+                    <a class="btn btn-danger btn-circle" title="Sinh mặc định" href="javascript:void(0);" v-bind:onclick="'formNewsCloneApp.funcAdd()'">Sinh mặc định</a>
+                    [% endif %] -->
+                    <div class="btn-group">
+                        <a class="btn green-haze btn-outline btn-sm" href="javascript:void(0);"
+                            v-bind:onclick="'newsFormApp.funcAdd()'">
+                            <i class="fa fa-plus-square"></i> Thêm mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portlet-body">
+            <form id="newsFilterForm" role="form" method="post">
+                <div class="row">
+                    <div class="form-group col-md-3">
+                        <select class="form-control" v-model="newFilter.folder_id" @click="initGrid(1)">
+                            <option value="">-- Danh mục --</option>
+                            <option v-for="item in list_folder" v-bind:value="item.id">{{item.text}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <select class="form-control" v-model="newFilter.status" @click="initGrid(1)">
+                            <option value="">-- Trạng thái --</option>
+                            <option value="1">Đang bật</option>
+                            <option value="2">Đã tắt</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group add-on">
+                            <input class="form-control" placeholder="Tìm kiếm tiêu đề  tin tức" id="keySearchForStore"
+                                type="text" v-model="newFilter.name">
+                            <div class="input-group-btn">
+                                <button @click="initGrid(1)" style="border: 1px solid #80909e5c; border-radius:0px"
+                                    class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1 form-group">
+                        <div class="input-group add-on">
+                            <div class="input-group-btn" title="xóa bộ lọc - refresh dữ liệu">
+                                <button @click="initGridByResetSearch(1)"
+                                    style="border: 1px solid #80909e5c; border-radius:4px" class="btn btn-default"
+                                    type="button"><i class="fa fa-refresh"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table id="newsGridTable" class=" table table-bordered table-fixed table-advance table-striped table-hover margin-top-10 margin-right-2.5 margin-left-2.5">
+                <thead>
+                    <tr role="row" class="heading">
+                        <th class="text-center" width="3%" class="text-center"> STT </th>
+                        <th class="text-center" width="2.4%" class="text-center">
+                            <div>
+                                <label class="mt-checkbox mt-checkbox-single mt-checkbox-outline"><input
+                                        name="btSelectAll" @click="selectAll" v-model="checkAll"
+                                        type="checkbox"><span></span></label>
+                            </div>
+                        </th>
+                        <th class="text-center" width="30%"> Tiêu đề </th>
+                        <th class="text-center" width="10%"> Danh mục </th>
+                        <th class="text-center" width="20%"> Trạng thái </th>
+                        <!-- <th class="text-center"> Hiển thị </th> -->
+                        <th class="text-center" width="20%"> Thông tin khác </th>
+                        <th class="text-center" width="10%" class="text-center"> Thao tác </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="loading">
+                        <td colspan="8" class="text-center">
+                            <div class="col-md-12">
+                                <div class="alert alert-warning margin-bottom-0"><i class="fa fa-spin fa-spinner"></i>
+                                    Đang tải dữ liệu ...</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-if="isLoaded && data.length === 0">
+                        <td colspan="8" class="text-center">
+                            <div class="col-md-12">
+                                <div class="alert alert-warning margin-bottom-0">Không tìm thấy tin tức nào</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-if="!loading" v-for="(row, index) in data">
+                        <td class="text-center">{{ index + 1 }}</td>
+                        <td class="text-center">
+                            <div>
+                                <label class="mt-checkbox mt-checkbox-single mt-checkbox-outline">
+                                    <input type="checkbox" v-model="newIds" :value="row.id" @click="checkSelectAll">
+                                    <span></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td >{{ row.title }}</td>
+                        <td class="text-center">{{ row.cate_title }}</td>
+                        <td class="text-center">
+                            <span class="btn-inline-hover btn btn-xs" :class="row.status == 1 ? 'btn-success' : row.status == 2 ? 'btn-default' : 'btn-danger'" style="width: 70px;">{{row.status == 1 ? 'Đang bật' : row.status == 2 ? 'Đã tắt' : 'Đã xóa'}}</span>
+                        </td>
+                        
+                        <td class="info_text">
+                            Ngày tạo: {{ moment(row.created_date).format('hh:mm:ss DD-MM-YYYY') }}<br>
+                            Người tạo: {{row.full_name ? row.full_name : row.user_name}}
+                        </td>
+                        <td class="text-center">
+                            <a href="javascript:void(0)" class="btn btn-xs btn-success" title="Sửa bài viết"
+                                v-bind:onclick="'newsFormApp.funcEdit(\'' + row.id + '\')'"><i aria-hidden="true"
+                                    class="fa fa-pencil-square-o"></i></a>
+                            [% if(hasPermission('NewsDelete')) %]
+                            <a href="javascript:void(0)" class="btn btn-xs btn-danger" title="Xóa bài viết"
+                                v-bind:onclick="'newsFormApp.funcDelete(\'' + row.id + '\')'"><i class="fa fa-trash-o"
+                                    aria-hidden="true"></i></a>
+                            [% endif %]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="text-center" v-if="pager.totalPage > 1 && !loading" >
+                <ul class="pagination">
+                    <li class="page-item" :class="{disabled:pager.page <= 1}">
+                        <a class="page-link" v-if="pager.page <=1">Trang trước</a>
+                        <a class="page-link" href="#" v-if="pager.page > 1" v-on:click="updateData(pager.page-1)">Trang
+                            trước</a>
+                    </li>
+                    <li v-for="i in pager.totalPage" v-if="i >= (pager.page-3) && i <= (pager.page+3)"
+                        v-bind:class="{ active: i == pager.page }"><a v-on:click="updateData(i)">{{i}}</a></li>
+                    <li class="page-item" :class="{disabled:pager.page >= pager.totalPage}">
+                        <a v-if="pager.page >= pager.totalPage" class="page-link">Trang sau</a>
+                        <a href="#" class="page-link" v-if="pager.page < pager.totalPage"
+                            v-on:click="updateData(pager.page+1)">Trang sau</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+[% include 'module/blog/view/news/tpl/form.vue.html' %]
+[% include 'module/blog/view/news/tpl/formNewsClone.vue.html' %]
